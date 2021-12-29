@@ -36,7 +36,8 @@ defmodule Discuss.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_discuss_key",
-    signing_salt: "WW9/jTB1"
+    signing_salt: "WW9/jTB1",
+    max_age: 24*60*60*37
 
   plug Discuss.Router
 end
