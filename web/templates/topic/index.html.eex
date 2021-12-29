@@ -2,13 +2,15 @@
 <ul class="collection">
     <%= for topic <- @topics do %>
     <li class="collection-item">
-        <%= link topic.title, to: topic_path(@conn, :show, topic) %>
-        <div class="right">
+        <%= link topic.title, to: topic_path(@conn, :show, topic), class: "teal-text text-darken-3" %>
             <%= if @conn.assigns.user != nil && (@conn.assigns.user.id == topic.user_id) do %>
-                <%= link "Edit", to: topic_path(@conn, :edit, topic) %>
-                <%= link "Delete", to: topic_path(@conn, :delete, topic), method: :delete %>
+            <%= link to: topic_path(@conn, :edit, topic), class: "secondary-content" do %>
+                <i class="material-icons" style="margin-left:15px;">edit</i>
             <% end %>
-        </div>
+            <%= link to: topic_path(@conn, :delete, topic), method: :delete, class: "secondary-content" do %>
+                <i class="material-icons">delete</i>
+            <% end %>
+        <% end %>
     </li>
     <% end %>
 </ul>

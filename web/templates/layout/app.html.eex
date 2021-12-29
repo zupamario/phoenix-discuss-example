@@ -7,10 +7,11 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Discuss!</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <title>Discuss!</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    
     <script>
       <%= if @conn.assigns.user do %>
         window.userToken = "<%= Phoenix.Token.sign(Discuss.Endpoint, "key", @conn.assigns.user.id) %>"
@@ -19,9 +20,9 @@
   </head>
 
   <body>
-    <nav class="light-blue">
+    <nav class="teal">
       <div class="nav-wrapper container">
-        <a href="/" class="brand-logo">
+        <a href="/" class="brand-logo center">
           Discuss
         </a>
         <ul class="right">

@@ -100,10 +100,10 @@ function commentTemplate(comment) {
   }
 
   return `
-  <li class="collection-item">
+  <li class="collection-item teal-text text-darken-3">
     ${comment.content}
     <div class = "secondary-content">
-      ${email}
+      <span class="teal-text text-lighten-2" style="font-size: 12px;">${email}</span>
     </div>
   </li>
 `;
