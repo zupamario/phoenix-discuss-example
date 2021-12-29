@@ -32,11 +32,3 @@ config :ueberauth, Ueberauth,
   providers: [
     github: { Ueberauth.Strategy.Github, [default_scope: "user:email", send_redirect_uri: false] }
   ]
-
-# This is safe on the server but you should hide these keys when putting stuff on Github
-# Hide the key!
-config :ueberauth, Ueberauth.Strategy.Github.OAuth,
-  #client_id: System.get_env("GITHUB_CLIENT_ID"),
-  #client_secret: System.get_env("GITHUB_CLIENT_SECRET")
-  client_id: "fdabdea1d8e42ebb5faa",
-  client_secret: "122fdaa7b0e3a3a424b50a1d060a01d092a7a1d4"
