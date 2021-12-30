@@ -108,7 +108,7 @@ function renderPresence(presence) {
   const templates = [];
   for (const [key, value] of Object.entries(presence)) {
     console.log(key, value);
-    templates.push(presenceChipTemplate(value.metas[0].user.email));
+    templates.push(presenceChipTemplate(value.metas[0].user.name));
   }
   document.querySelector('.presence-chips').innerHTML = templates.join('');
 }
