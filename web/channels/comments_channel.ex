@@ -1,14 +1,29 @@
 defmodule Discuss.CommentsChannel do
     use Discuss.Web, :channel
 
-    alias Discuss.{Topic, Comment}
+    alias Discuss.{Topic, Comment, User, Presence}
 
     def join("comments:" <> topic_id, _params, socket) do
         topic_id = String.to_integer(topic_id)
         topic = Repo.get(Topic, topic_id)
             |> Repo.preload(comments: [:user])
+        
+        send(self(), :after_join)
 
         {:ok, %{comments: topic.comments}, assign(socket, :topic, topic)}
+    end
+
+    def handle_info(:after_join, socket) do
+        user_id = socket.assigns.user_id
+        user = Repo.get(User, user_id)
+
+        {:ok, _} = Presence.track(socket, user_id, %{
+            online_at: inspect(System.system_time(:second)),
+            user: user
+        })
+
+        push(socket, "presence_state", Presence.list(socket))
+        {:noreply, socket}
     end
 
     def handle_in(_name, %{"content" => content}, socket) do

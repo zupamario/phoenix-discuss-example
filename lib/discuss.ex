@@ -8,11 +8,12 @@ defmodule Discuss do
     children = [
       # Start the Ecto repository
       Discuss.Repo,
+      {Phoenix.PubSub, name: Discuss.PubSub},
+      Discuss.Presence,
       # Start the endpoint when the application starts
-      Discuss.Endpoint,
+      Discuss.Endpoint
       # Start your own worker by calling: Discuss.Worker.start_link(arg1, arg2, arg3)
       # worker(Discuss.Worker, [arg1, arg2, arg3]),
-      {Phoenix.PubSub, name: Discuss.PubSub}
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

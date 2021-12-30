@@ -3,7 +3,7 @@
 
 // To use Phoenix channels, the first step is to import Socket
 // and connect at the socket path in "lib/my_app/endpoint.ex":
-import {Socket} from "phoenix"
+import {Socket, Presence} from "phoenix"
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
@@ -56,6 +56,20 @@ socket.connect()
 const createSocket = (topicId) => {
   // Now that you are connected, you can join channels with a topic:
   let channel = socket.channel(`comments:${topicId}`, {})
+  const presence = new Presence(channel);
+  
+  presence.onSync(() => {
+    renderPresence(presence.list());
+  });
+  
+  presence.onJoin((key, current, joiner) => {
+    console.log('join', key, current, joiner);
+  });
+
+  presence.onLeave((key, current, leaver) => {
+    console.log('leave', key, current, leaver);
+  });
+
   channel.join()
     .receive("ok", resp => { 
       console.log("Joined successfully", resp)
@@ -64,7 +78,7 @@ const createSocket = (topicId) => {
     .receive("error", resp => { console.log("Unable to join", resp) })
   
   channel.on(`comments:${topicId}:new`, renderComment);
-  
+
   document.querySelector('button').addEventListener('click', () => {
     const content = document.querySelector('textarea').value;
     document.querySelector('textarea').value = "";
@@ -80,6 +94,22 @@ const createSocket = (topicId) => {
     }
   });
 };
+
+function renderPresence(presence) {
+  const templates = [];
+  for (const [key, value] of Object.entries(presence)) {
+    console.log(key, value);
+    templates.push(presenceChipTemplate(value.metas[0].user.email));
+  }
+  document.querySelector('.presence-chips').innerHTML = templates.join('');
+}
+
+function presenceChipTemplate(name) {
+  return `
+  <div class="chip teal accent-3">
+    ${name}
+  </div>`
+}
 
 function renderComments(comments) {
   const renderedComments = comments.reverse().map(comment => {
