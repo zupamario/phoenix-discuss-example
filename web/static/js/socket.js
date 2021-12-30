@@ -6,6 +6,8 @@
 import {Socket, Presence} from "phoenix"
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
+socket.onError( () => console.log("there was an error with the socket connection!") )
+socket.onClose( () => console.log("the socket connection dropped") )
 
 // When you connect, you'll often need to authenticate the client.
 // For example, imagine you have an authentication plug, `MyAuth`,
@@ -52,6 +54,10 @@ let socket = new Socket("/socket", {params: {token: window.userToken}})
 // from connect if you don't care about authentication.
 
 socket.connect()
+socket.connect()
+socket.connect()
+socket.connect()
+socket.connect()
 
 const createSocket = (topicId) => {
   // Now that you are connected, you can join channels with a topic:
@@ -78,6 +84,9 @@ const createSocket = (topicId) => {
     .receive("error", resp => { console.log("Unable to join", resp) })
   
   channel.on(`comments:${topicId}:new`, renderComment);
+
+  channel.onError( () => console.log("there was an error with the channel connection!") )
+  channel.onClose( () => console.log("the channel has gone away gracefully") )
 
   document.querySelector('button').addEventListener('click', () => {
     const content = document.querySelector('textarea').value;
