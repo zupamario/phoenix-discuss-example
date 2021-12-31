@@ -19,11 +19,26 @@ defmodule Discuss.CommentsChannel do
 
         {:ok, _} = Presence.track(socket, user_id, %{
             online_at: inspect(System.system_time(:second)),
-            user: user
+            user: user,
+            typing: false
         })
 
         push(socket, "presence_state", Presence.list(socket))
         {:noreply, socket}
+    end
+
+    def handle_in("user:typing", %{"typing" => is_typing}, socket) do
+        IO.puts("User is typing #{is_typing}")
+        user_id = socket.assigns.user_id
+        user = Repo.get(User, user_id)
+
+        {:ok, _} = Presence.update(socket, user_id, %{
+            online_at: inspect(System.system_time(:second)),
+            user: user,
+            typing: is_typing
+        })
+        
+        {:reply, :ok, socket}
     end
 
     def handle_in(_name, %{"content" => content}, socket) do

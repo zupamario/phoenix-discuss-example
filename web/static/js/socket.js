@@ -54,10 +54,6 @@ socket.onClose( () => console.log("the socket connection dropped") )
 // from connect if you don't care about authentication.
 
 socket.connect()
-socket.connect()
-socket.connect()
-socket.connect()
-socket.connect()
 
 const createSocket = (topicId) => {
   // Now that you are connected, you can join channels with a topic:
@@ -69,11 +65,11 @@ const createSocket = (topicId) => {
   });
   
   presence.onJoin((key, current, joiner) => {
-    console.log('join', key, current, joiner);
+    // console.log('join', key, current, joiner);
   });
 
   presence.onLeave((key, current, leaver) => {
-    console.log('leave', key, current, leaver);
+    // console.log('leave', key, current, leaver);
   });
 
   channel.join()
@@ -94,29 +90,63 @@ const createSocket = (topicId) => {
     channel.push('comment:add', { content: content })
   });
 
+  // Track user typing
+  const typingTimeout = 2000;
+  var typingTimer;
+  let userTyping = false;
+
+  const userStartsTyping = function() {
+    if (userTyping) { return }
+  
+    userTyping = true
+    channel.push('user:typing', { typing: true })
+  }
+
+  const userStopsTyping = function() {
+    clearTimeout(typingTimer);
+    userTyping = false
+    channel.push('user:typing', { typing: false })
+  }
+
   document.querySelector('.materialize-textarea').addEventListener("keypress", (event) => {
     if(event.which === 13 && !event.shiftKey){
       const content = document.querySelector('textarea').value;
       channel.push('comment:add', { content: content })
       event.target.value = "";
       event.preventDefault(); // Prevents the addition of a new line in the text field (not needed in a lot of cases)
+    } else {
+      userStartsTyping()
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(userStopsTyping, typingTimeout);
     }
+  });
+
+  document.querySelector('.materialize-textarea').addEventListener('paste', (event) => {
+    userStartsTyping()
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(userStopsTyping, typingTimeout);
   });
 };
 
 function renderPresence(presence) {
   const templates = [];
   for (const [key, value] of Object.entries(presence)) {
-    console.log(key, value);
-    templates.push(presenceChipTemplate(value.metas[0].user.name));
+    // console.log(key, value);
+    const meta = value.metas[0];
+    templates.push(presenceChipTemplate(meta.user.name, meta.typing));
   }
   document.querySelector('.presence-chips').innerHTML = templates.join('');
 }
 
-function presenceChipTemplate(name) {
+function presenceChipTemplate(name, typing) {
+  var typingIndicator = ''
+  if (typing) {
+    typingIndicator = ' <i>...</i>'
+  }
+
   return `
   <div class="chip teal accent-3">
-    ${name}
+    ${name} ${typingIndicator}
   </div>`
 }
 
@@ -133,16 +163,16 @@ function renderComment(event) {
 }
 
 function commentTemplate(comment) {
-  let email = 'Anonymous';
+  let name = 'Anonymous';
   if (comment.user) {
-    email = comment.user.email;
+    name = comment.user.name;
   }
 
   return `
   <li class="collection-item teal-text text-darken-3">
     ${comment.content}
     <div class = "secondary-content">
-      <span class="teal-text text-lighten-2" style="font-size: 12px;">${email}</span>
+      <span class="teal-text text-lighten-2" style="font-size: 12px;">${name}</span>
     </div>
   </li>
 `;
