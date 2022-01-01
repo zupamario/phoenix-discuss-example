@@ -1,6 +1,7 @@
 defmodule Discuss.Documents do
 
     alias Discuss.Documents.Upload
+    alias Discuss.Documents.Thumbnail
     alias Discuss.Repo
 
     def create_upload_from_plug_upload(%Plug.Upload{
@@ -19,8 +20,10 @@ defmodule Discuss.Documents do
                     hash: hash,
                     size: size})
                     |> Repo.insert(),
-                :ok <- File.cp(tmp_path, Upload.local_path(upload.id, filename))
+                local_path <- Upload.local_path(upload.id, filename),
+                :ok <- File.cp(tmp_path, local_path)
             do
+                Thumbnail.make_thumbnail(local_path)
                 upload
             else
                 {:error, reason} -> Repo.rollback(reason)
