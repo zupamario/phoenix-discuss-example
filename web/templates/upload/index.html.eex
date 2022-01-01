@@ -1,0 +1,31 @@
+<table class="table highlight">
+    <thead>
+        <th>ID</th>
+        <th>Filename</th>
+        <th>Type</th>
+        <th>Time</th>
+        <th>Download</th>
+        <th>Delete</th>
+    </thead>
+
+    <tbody>
+        <%= for upload <- Enum.reverse(@uploads) do %>
+            <tr>
+                <td><%= upload.id %></td>
+                <td><%= upload.filename %></td>
+                <td><%= upload.content_type %></td>
+                <td><%= upload.inserted_at %></td>
+                <td>
+                    <%= link to: upload_path(@conn, :show, upload.id), class: "btn" do %>
+                        <i class="material-icons">download</i>
+                    <% end %>
+                </td>
+                <td>
+                    <%= link to: upload_path(@conn, :delete, upload.id), method: :delete, class: "red btn" do %>
+                        <i class="material-icons">delete</i>
+                    <% end %>
+                </td>
+            </tr>
+        <% end %>
+    </tbody>
+</table>
