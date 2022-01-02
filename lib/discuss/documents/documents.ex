@@ -52,6 +52,11 @@ defmodule Discuss.Documents do
         upload = Repo.get!(Upload, id)
         Repo.delete(upload)
         File.rm(Upload.local_path(id, upload.filename))
-        File.rm(Upload.thumbnail_path(id))
+        thumb_path = Upload.thumbnail_path(id)
+        if File.exists?(thumb_path) do
+            File.rm(Upload.thumbnail_path(id))
+        else
+            :ok
+        end
     end
 end
