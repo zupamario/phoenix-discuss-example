@@ -1,4 +1,139 @@
-<%= form_for @conn, upload_path(@conn, :create), [multipart: true], fn f -> %>
-    <%= file_input f, :upload, class: "form-control" %>
-    <%= submit "Upload", class: "btn" %>
-<% end %>
+<h4 class="center-align">Upload some Files</h4>
+<div class="divider"></div>
+<div class="section">
+    <h5 class="center-align">The boring old way</h5>
+    <div id="boring-upload" class="row center-align">
+        <div class="col s12">
+            <%= form_for @conn, upload_path(@conn, :create), [multipart: true], fn f -> %>
+                <%= file_input f, :upload, class: "form-control" %>
+                <%= submit "Upload", class: "btn" %>
+            <% end %>
+        </div>
+    </div>
+</div>
+<div class="divider"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("Preparing Dropzone");
+
+        // Get the template HTML and remove it from the doument.
+        var previewNode = document.querySelector("#template");
+        previewNode.id = "";
+        var previewTemplate = previewNode.parentNode.innerHTML;
+        previewNode.parentNode.removeChild(previewNode);
+
+        let myDropzone = new window.Dropzone(document.body, { // Make the whole body a dropzone
+            url: "/uploads",
+            paramName: "upload",
+            thumbnailWidth: 200,
+            thumbnailHeight: 200,
+            previewTemplate: previewTemplate,
+            previewsContainer: "#previews", // Define the container to display the previews
+            autoQueue: false, // Make sure the files aren't queued until manually added
+            clickable: ".fileinput-button", // Define the element that should be used as click trigger to select files.
+            headers: {
+                'X-CSRF-TOKEN': "<%= Phoenix.Controller.get_csrf_token() %>"
+            }
+        });
+
+        // Setup the buttons for all transfers
+        // The "add files" button doesn't need to be setup because the config
+        // `clickable` has already been specified.
+        document.querySelector("#actions .start").onclick = function() {
+            myDropzone.enqueueFiles(myDropzone.getFilesWithStatus(Dropzone.ADDED));
+        };
+        document.querySelector("#actions .cancel").onclick = function() {
+            myDropzone.removeAllFiles(true);
+            document.querySelector("#total-progress").style.opacity = "0";
+        };
+
+        myDropzone.on("addedfile", function(file) {
+            // Hookup the start button
+            console.log("addedfile")
+            file.previewElement.querySelector(".start").onclick = function() { myDropzone.enqueueFile(file); };
+        });
+
+        // Update the total progress bar
+        myDropzone.on("totaluploadprogress", function(progress, totalBytes, totalBytesSend) {
+            console.log(progress, totalBytes, totalBytesSend);
+            const finishedFiles = myDropzone.getFilesWithStatus(Dropzone.SUCCESS);
+            console.log(finishedFiles);
+            finishedFiles.forEach(file => {
+               totalBytes += file.size;
+               totalBytesSend += file.size;
+               progress = totalBytesSend / totalBytes * 100.0;
+            });
+            document.querySelector("#total-progress .determinate").style.width = progress + "%";
+        });
+
+        myDropzone.on("sending", function(file) {
+            // Show the total progress bar when upload starts
+            document.querySelector("#total-progress").style.opacity = "1";
+            // And disable the start button
+            file.previewElement.querySelector(".start").setAttribute("disabled", "disabled");
+        });
+
+        // Hide the total progress bar when nothing's uploading anymore
+        myDropzone.on("queuecomplete", function(progress) {
+            document.querySelector("#total-progress").style.opacity = "0";
+        });
+
+        //myDropzone.on("complete", function(file) {
+        //    myDropzone.removeFile(file);
+        //});
+    });
+</script>
+
+<div class="section center-align">
+    <h5>The fancy way</h5>
+    <div id="actions" class="row">
+        <button class="btn fileinput-button dz-clickable">
+            <i class="material-icons left">add</i>
+            Add files...
+        </button>
+        <button type="submit" class="btn start">
+            <i class="material-icons left">file_upload</i>
+            Start all
+        </button>
+        <button type="reset" class="btn red cancel">
+            <i class="material-icons left">cancel</i>
+            Cancel all
+        </button>
+    </div>
+
+    <div id="total-progress" class="progress" style="opacity: 0;">
+        <div class="determinate" style="width: 0%;" data-dz-uploadprogress=""></div>
+    </div>
+
+    <!-- HTML heavily inspired by http://blueimp.github.io/jQuery-File-Upload/ -->
+    <div id="previews">
+        <div id="template" class="row file-row valign-wrapper">
+            <!-- This is used as the file preview template -->
+            <div class="col s2">
+                <span class="preview"><img class="upload-thumb" data-dz-thumbnail /></span>
+            </div>
+            <div class="col s3">
+                <p class="name" data-dz-name></p>
+                <strong class="error text-danger" data-dz-errormessage></strong>
+            </div>
+            <div class="col s3">
+                <p class="size" data-dz-size></p>
+                <div class="progress">
+                <div class="determinate" style="width:0%;" data-dz-uploadprogress></div>
+                </div>
+            </div>
+            <div class="col s4">
+            <button class="btn start">
+                <i class="material-icons">file_upload</i>
+            </button>
+            <button data-dz-remove class="btn red cancel">
+                <i class="material-icons">cancel</i>
+            </button>
+            <button data-dz-remove class="btn remove">
+                <i class="material-icons">remove_circle</i>
+            </button>
+            </div>
+        </div>
+    </div>
+</div>

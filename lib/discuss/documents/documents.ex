@@ -39,7 +39,8 @@ defmodule Discuss.Documents do
     end
 
     def list_uploads do
-        Repo.all(Upload)
+        unsorted = Repo.all(Upload)
+        Enum.sort_by(unsorted, &(&1.id))
     end
 
     @spec get_upload!(any) :: Upload
@@ -51,5 +52,6 @@ defmodule Discuss.Documents do
         upload = Repo.get!(Upload, id)
         Repo.delete(upload)
         File.rm(Upload.local_path(id, upload.filename))
+        File.rm(Upload.thumbnail_path(id))
     end
 end
