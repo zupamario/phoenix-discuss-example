@@ -46,4 +46,10 @@ defmodule Discuss.UploadController do
             |> redirect(to: upload_path(conn, :index))
         end
     end
+
+    def thumbnail(conn, %{"upload_id" => id}) do
+      conn
+      |> put_resp_content_type("image/png")
+      |> send_file(200, Upload.thumbnail_path(id))
+    end
  end

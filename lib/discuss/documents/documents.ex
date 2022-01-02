@@ -21,13 +21,20 @@ defmodule Discuss.Documents do
                     size: size})
                     |> Repo.insert(),
                 local_path <- Upload.local_path(upload.id, filename),
-                :ok <- File.cp(tmp_path, local_path)
+                :ok <- File.cp(tmp_path, local_path),
+                {:ok, upload} <- create_thumbnail(upload, local_path)
             do
-                Thumbnail.make_thumbnail(local_path)
                 upload
             else
                 {:error, reason} -> Repo.rollback(reason)
             end
+        end
+    end
+
+    defp create_thumbnail(upload, local_path) do
+        case Thumbnail.make_thumbnail(local_path, upload.id) do
+            :ok -> Upload.changeset(upload, %{thumbnail?: true}) |> Repo.update()
+            :error -> Upload.changeset(upload, %{}) |> Repo.update()
         end
     end
 

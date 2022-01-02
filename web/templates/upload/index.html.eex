@@ -1,5 +1,6 @@
 <table class="table highlight">
     <thead>
+        <th>Thumbnail</th>
         <th>ID</th>
         <th>Filename</th>
         <th>Type</th>
@@ -11,6 +12,15 @@
     <tbody>
         <%= for upload <- Enum.reverse(@uploads) do %>
             <tr>
+                <td>
+                    <%= if upload.thumbnail? do %>
+                        <%= link to: upload_thumbnail_path(@conn, :thumbnail, upload.id) do %>
+                            <%= img_tag upload_thumbnail_path(@conn, :thumbnail, upload.id), class: "upload-image" %>
+                        <% end %>
+                    <% else %>
+                        <i class="large material-icons">insert_drive_file</i>
+                    <% end %>
+                </td>
                 <td><%= upload.id %></td>
                 <td><%= upload.filename %></td>
                 <td><%= upload.content_type %></td>

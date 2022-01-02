@@ -26,7 +26,10 @@ defmodule Discuss.Router do
     # put "/topics/:id", TopicController, :update
     # delete "/topics/:id", TopicController, :delete
 
-    resources "/uploads", UploadController, only: [:index, :new, :create, :show, :delete]
+    resources "/uploads", UploadController, only: [:index, :new, :create, :show, :delete] do
+      get "/thumbnail", UploadController, :thumbnail, as: "thumbnail"
+    end
+
     resources "/", TopicController
 
   end
