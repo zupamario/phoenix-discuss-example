@@ -32,8 +32,13 @@ defmodule Discuss.TopicController do
     query = from rc in ReadTimestamp,
       where: rc.user_id == ^conn.assigns.user.id,
       select: %{rc.topic_id => rc.updated_at}
-    read_counter = Repo.all(query)
-    read_counter = Enum.reduce(read_counter, fn m, acc -> Map.merge(acc, m) end)
+
+    # Turn list of dicts into one result dict
+    read_counter = case Repo.all(query) do
+      [] -> %{}
+      [%{} | _] = result -> Enum.reduce(result, fn m, acc -> Map.merge(acc, m) end)
+    end
+
     #IO.inspect(read_counter)
 
     last_topic_comments = list_last_comments()
