@@ -1,7 +1,7 @@
 defmodule Discuss.TopicController do
   use Discuss.Web, :controller
 
-  alias Discuss.Topic
+  alias Discuss.{Topic, Comment, ReadTimestamp}
 
   plug Discuss.Plugs.RequireAuth when action in [:new, :create, :edit, :update, :delete, :show]
   plug :check_topic_owner when action in [:update, :edit, :delete]
@@ -28,7 +28,51 @@ defmodule Discuss.TopicController do
 
   def index(conn, _params) do
     topics = Repo.all(Topic)
-    render conn, "index.html", topics: topics
+
+    query = from rc in ReadTimestamp,
+      where: rc.user_id == ^conn.assigns.user.id,
+      select: %{rc.topic_id => rc.updated_at}
+    read_counter = Repo.all(query)
+    read_counter = Enum.reduce(read_counter, fn m, acc -> Map.merge(acc, m) end)
+    #IO.inspect(read_counter)
+
+    last_topic_comments = list_last_comments()
+    last_topic_comments = Enum.reduce(last_topic_comments, fn m, acc -> Map.merge(acc, m) end)
+    #IO.inspect(last_topic_comments)
+
+    all_topic_ids = Enum.map(topics, fn t -> t.id end)
+    topics_with_news = compute_topics_with_news(all_topic_ids, read_counter, last_topic_comments)
+    #IO.inspect topics_with_news
+
+    render conn, "index.html", topics: topics, topics_with_news: topics_with_news
+  end
+
+  defp compute_topics_with_news(all_topic_ids, read_timestamps, last_topic_comments) do
+    outdated = Enum.filter(last_topic_comments, fn {k, v} -> read_timestamps[k] != nil and NaiveDateTime.compare(v, read_timestamps[k]) == :gt end)
+      |> Enum.map(fn {k, _v} -> k end)
+      |> MapSet.new()
+    #IO.inspect(outdated)
+
+    topics_with_timestamps = MapSet.new(Map.keys(read_timestamps))
+
+    MapSet.new(all_topic_ids)
+      |> MapSet.difference(topics_with_timestamps)
+      |> MapSet.union(outdated)
+  end
+
+  def list_last_comments do
+    import Ecto.Query
+
+    # Awesome help from this excellent blog post
+    # https://elixirforum.com/t/preloading-top-comments-for-posts-in-ecto/1052/22
+    query = from(t in Topic, [
+      inner_lateral_join: ljc in fragment("SELECT id FROM comments WHERE topic_id = ? ORDER BY updated_at DESC LIMIT 1", t.id),
+      inner_join: c in Comment, on: ljc.id == c.id,
+      #where: a.id in ^album_ids,
+      order_by: [asc: t.id, desc: c.updated_at],
+      select: %{t.id => c.updated_at}
+    ])
+    Repo.all(query)
   end
 
   def show(conn, %{"id" => topic_id}) do

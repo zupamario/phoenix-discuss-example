@@ -79,7 +79,7 @@ const createSocket = (topicId) => {
     })
     .receive("error", resp => { console.log("Unable to join", resp) })
   
-  channel.on(`comments:${topicId}:new`, renderComment);
+  channel.on(`comments:new`, renderComment);
 
   channel.onError( () => console.log("there was an error with the channel connection!") )
   channel.onClose( () => console.log("the channel has gone away gracefully") )
