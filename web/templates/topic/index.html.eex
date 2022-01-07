@@ -1,4 +1,7 @@
-<h5>Topics</h5>
+<div class="section">
+    <h5 style="display:inline">Topics</h5>
+    <%= link "Mark As Read", to: topic_path(@conn, :allread), class: "btn right teal lighten-3" %>
+</div>
 <ul class="collection">
     <%= for topic <- @topics do %>
     <li class="collection-item">

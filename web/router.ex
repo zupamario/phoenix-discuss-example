@@ -30,6 +30,8 @@ defmodule Discuss.Router do
       get "/thumbnail", UploadController, :thumbnail, as: "thumbnail"
     end
 
+    get "/allread", TopicController, :allread
+
     resources "/", TopicController
 
   end

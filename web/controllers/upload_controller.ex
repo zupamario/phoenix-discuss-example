@@ -25,7 +25,7 @@ defmodule Discuss.UploadController do
 
     def index(conn, _params) do
         uploads = Documents.list_uploads()
-        render(conn, "index.html", uploads: uploads)
+        render(conn, "index.html", uploads: uploads, show_new_link: true)
     end
 
     def show(conn, %{"id" => id}) do

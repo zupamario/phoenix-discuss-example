@@ -3,7 +3,7 @@ defmodule Discuss.TopicController do
 
   alias Discuss.{Topic, Comment, ReadTimestamp}
 
-  plug Discuss.Plugs.RequireAuth when action in [:new, :create, :edit, :update, :delete, :show]
+  plug Discuss.Plugs.RequireAuth when action in [:new, :create, :edit, :update, :delete, :show, :allread]
   plug :check_topic_owner when action in [:update, :edit, :delete]
 
   def new(conn, _params) do
@@ -130,5 +130,22 @@ defmodule Discuss.TopicController do
       |> redirect(to: topic_path(conn, :index))
       |> halt()
     end
+  end
+
+  def allread(conn, _) do
+    mark_all_as_read(conn.assigns.user.id)
+    conn
+    |> put_flash(:info, "All Topics marked as read")
+    |> redirect(to: topic_path(conn, :index))
+  end
+
+  defp mark_all_as_read(user_id) do
+    topics = Repo.all(Topic)
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    read_timestamps = Enum.map(topics, fn t ->
+      %{user_id: user_id, topic_id: t.id, inserted_at: now, updated_at: now}
+    end)
+    IO.inspect read_timestamps
+    Repo.insert_all(ReadTimestamp, read_timestamps, on_conflict: {:replace, [:updated_at]}, conflict_target: [:user_id, :topic_id])
   end
 end
