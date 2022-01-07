@@ -132,8 +132,9 @@ function renderPresence(presence) {
   const templates = [];
   for (const [key, value] of Object.entries(presence)) {
     // console.log(key, value);
-    const meta = value.metas[0];
-    templates.push(presenceChipTemplate(meta.user.name, meta.typing));
+    // User can be present multiple times so we search for typing status on all metas
+    const is_typing = value.metas.some((element) => {return element.typing});
+    templates.push(presenceChipTemplate(value.metas[0].user.name, is_typing));
   }
   document.querySelector('.presence-chips').innerHTML = templates.join('');
 }
