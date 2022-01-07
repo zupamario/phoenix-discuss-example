@@ -28,28 +28,19 @@ defmodule Discuss.TopicController do
 
   def index(conn, _params) do
     topics = Repo.all(Topic)
-
-    query = from rc in ReadTimestamp,
-      where: rc.user_id == ^conn.assigns.user.id,
-      select: %{rc.topic_id => rc.updated_at}
-
-    # Turn list of dicts into one result dict
-    read_counter = case Repo.all(query) do
-      [] -> %{}
-      [%{} | _] = result -> Enum.reduce(result, fn m, acc -> Map.merge(acc, m) end)
-    end
-
-    #IO.inspect(read_counter)
-
-    last_topic_comments = list_last_comments()
-    last_topic_comments = Enum.reduce(last_topic_comments, fn m, acc -> Map.merge(acc, m) end)
-    #IO.inspect(last_topic_comments)
-
-    all_topic_ids = Enum.map(topics, fn t -> t.id end)
-    topics_with_news = compute_topics_with_news(all_topic_ids, read_counter, last_topic_comments)
-    #IO.inspect topics_with_news
-
+    topics_with_news = fetch_topics_with_news(conn.assigns.user, topics)
     render conn, "index.html", topics: topics, topics_with_news: topics_with_news
+  end
+
+  defp fetch_topics_with_news(user, topics) when user != nil do
+    read_timestamps = fetch_read_timestamps(user.id)
+    latest_topic_comments = fetch_latest_comments()
+    all_topic_ids = Enum.map(topics, fn t -> t.id end)
+    compute_topics_with_news(all_topic_ids, read_timestamps, latest_topic_comments)
+  end
+
+  defp fetch_topics_with_news(user, _topics) when user == nil do
+    MapSet.new()
   end
 
   defp compute_topics_with_news(all_topic_ids, read_timestamps, last_topic_comments) do
@@ -65,7 +56,19 @@ defmodule Discuss.TopicController do
       |> MapSet.union(outdated)
   end
 
-  def list_last_comments do
+  defp fetch_read_timestamps(user_id) do
+    query = from rc in ReadTimestamp,
+      where: rc.user_id == ^user_id,
+      select: %{rc.topic_id => rc.updated_at}
+
+    # Turn list of dicts into one result dict
+    case Repo.all(query) do
+      [] -> %{}
+      [%{} | _] = result -> Enum.reduce(result, fn m, acc -> Map.merge(acc, m) end)
+    end
+  end
+
+  defp fetch_latest_comments do
     import Ecto.Query
 
     # Awesome help from this excellent blog post
@@ -77,7 +80,9 @@ defmodule Discuss.TopicController do
       order_by: [asc: t.id, desc: c.updated_at],
       select: %{t.id => c.updated_at}
     ])
+    # Fetch comments and turn list of dicts into dict
     Repo.all(query)
+      |> Enum.reduce(fn m, acc -> Map.merge(acc, m) end)
   end
 
   def show(conn, %{"id" => topic_id}) do
