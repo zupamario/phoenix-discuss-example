@@ -145,7 +145,6 @@ defmodule Discuss.TopicController do
     read_timestamps = Enum.map(topics, fn t ->
       %{user_id: user_id, topic_id: t.id, inserted_at: now, updated_at: now}
     end)
-    IO.inspect read_timestamps
     Repo.insert_all(ReadTimestamp, read_timestamps, on_conflict: {:replace, [:updated_at]}, conflict_target: [:user_id, :topic_id])
   end
 end
