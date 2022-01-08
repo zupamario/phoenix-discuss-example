@@ -31,6 +31,7 @@ defmodule Discuss.Router do
     end
 
     get "/allread", TopicController, :allread
+    get "/whiteboard", TopicController, :whiteboard
 
     resources "/", TopicController
 

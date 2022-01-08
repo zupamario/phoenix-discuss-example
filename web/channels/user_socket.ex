@@ -3,6 +3,7 @@ defmodule Discuss.UserSocket do
 
   ## Channels
   channel "comments:*", Discuss.CommentsChannel
+  channel "whiteboard:*", Discuss.WhiteboardChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

@@ -147,4 +147,8 @@ defmodule Discuss.TopicController do
     end)
     Repo.insert_all(ReadTimestamp, read_timestamps, on_conflict: {:replace, [:updated_at]}, conflict_target: [:user_id, :topic_id])
   end
+
+  def whiteboard(conn, _) do
+    render conn, "whiteboard.html"
+  end
 end

@@ -8,6 +8,7 @@ import {Socket, Presence} from "phoenix"
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 socket.onError( () => console.log("there was an error with the socket connection!") )
 socket.onClose( () => console.log("the socket connection dropped") )
+exports.socket = socket;
 
 // When you connect, you'll often need to authenticate the client.
 // For example, imagine you have an authentication plug, `MyAuth`,

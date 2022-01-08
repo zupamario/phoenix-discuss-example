@@ -19,5 +19,6 @@ import "phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 import "./socket"
+import "./whiteboard"
 import Dropzone from "dropzone";
 window.Dropzone = Dropzone;

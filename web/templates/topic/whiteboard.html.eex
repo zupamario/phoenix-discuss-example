@@ -1,0 +1,8 @@
+<canvas id="c" width="300", height="300" style="border: 1px solid black;" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/460/fabric.min.js"></script>
+<script type=module>
+    document.addEventListener("DOMContentLoaded", function() {
+        whiteboard_main();
+    });
+</script>
