@@ -1,4 +1,5 @@
 import { setup_channel } from "./whiteboard_channel";
+import { makePreviewCursor } from "./whiteboard_helper";
 
 let fabricCanvas = null;
 
@@ -9,34 +10,100 @@ function attach_events(canvas) {
 
   canvas.on("mouse:move", function (options) {
     if (options.e.buttons > 0) {
-      console.log(options.e);
-      //console.log(JSON.stringify(canvas));
-      const brush = canvas.freeDrawingBrush;
-      console.log(typeof brush, brush);
-
-      const points = brush._points;
-      const decimantedPoints = brush.decimatePoints(points, brush.decimate);
-      const svgPath = brush.convertPointsToSVGPath(decimantedPoints);
-      //console.log(svgPath);
-      let path = brush.createPath(svgPath);
-      console.log(path);
-      path.top = path.top + 20;
-      window.sendPreviewUpdate(JSON.stringify(path));
+      send_preview_path();
     }
+
+    throttledSendCursorPosUpdate(
+      JSON.stringify({ x: options.pointer.x, y: options.pointer.y })
+    );
+  });
+
+  canvas.on("path:created", function (options) {
+    console.log("Path created", options);
+    if (fabricCanvas.isDrawingMode) {
+      // We are in drawing mode so this means the user has finished drawing his part
+      sendClearPreviewPath();
+      sendAddPath(options.path);
+      fabricCanvas.remove(options.path);
+    }
+    //console.log(fabricCanvas.getObjects());
+  });
+
+  canvas.on("object:added", function (options) {
+    //console.log("Object added", options);
   });
 }
 
-let lastPath = null;
+let lastSendPath = "";
 
-export function updatePreviewPath(pathJson) {
+function send_preview_path() {
+  const brush = fabricCanvas.freeDrawingBrush;
+  const points = brush._points;
+  const decimantedPoints = brush.decimatePoints(points, brush.decimate);
+  const svgPath = brush.convertPointsToSVGPath(decimantedPoints);
+  const path = brush.createPath(svgPath);
+  const jsonPath = JSON.stringify(path);
+  if (jsonPath != lastSendPath) {
+    window.throttledSendPreviewUpdate(jsonPath);
+    lastSendPath = jsonPath;
+    console.log("sending path");
+  } else {
+    console.log("skipping send path");
+  }
+}
+
+function sendAddPath(path) {
+  console.log(path);
+  const jsonPath = JSON.stringify(path);
+  window.sendAddPath(jsonPath);
+}
+
+let previewPaths = new Map();
+
+export function updatePreviewPath(pathJson, userId) {
   const pathJsonObject = JSON.parse(pathJson);
   fabric.util.enlivenObjects([pathJsonObject], function (liveObjects) {
     liveObjects.forEach((lo) => {
-      if (lastPath) {
-        fabricCanvas.remove(lastPath);
-      }
+      clearPreviewPath(userId);
+      lo.stroke = "blue";
       fabricCanvas.add(lo);
-      lastPath = lo;
+      fabricCanvas.sendToBack(lo);
+      previewPaths.set(userId, lo);
+    });
+  });
+}
+
+export function clearPreviewPath(userId) {
+  if (previewPaths.has(userId)) {
+    fabricCanvas.remove(previewPaths.get(userId));
+    previewPaths.delete(userId);
+  }
+}
+
+const previewCursors = new Map();
+
+export function updatePreviewCursor(cursorPos, userId) {
+  cursorPos = JSON.parse(cursorPos);
+  //console.log(cursorPos);
+  // Remove existing preview cursor from canvas and map
+  if (previewCursors.has(userId)) {
+    const cursor = previewCursors.get(userId);
+    cursor.set({ left: cursorPos.x, top: cursorPos.y });
+    cursor.setCoords();
+    fabricCanvas.renderAll();
+  } else {
+    const previewCursor = makePreviewCursor(cursorPos, userId);
+    previewCursors.set(userId, previewCursor);
+    fabricCanvas.add(previewCursor);
+  }
+}
+
+export function addPath(pathJson) {
+  const pathJsonObject = JSON.parse(pathJson);
+  fabric.util.enlivenObjects([pathJsonObject], function (liveObjects) {
+    liveObjects.forEach((lo) => {
+      lo.stroke = "green";
+      fabricCanvas.add(lo);
     });
   });
 }
@@ -47,45 +114,12 @@ function draw_using_fabric() {
   fabricCanvas = new fabric.Canvas("c");
   attach_events(fabricCanvas);
   fabricCanvas.isDrawingMode = true;
+  fabricCanvas.preserveObjectStacking = true;
   console.log(fabricCanvas.freeDrawingBrush);
   fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush.color = "red";
-  fabricCanvas.freeDrawingBrush.width = 10;
-  fabricCanvas.freeDrawingBrush.decimate = 30.0;
-}
-
-function add_test_items(canvas) {
-  // create a rectangle with angle=45
-  var rect = new fabric.Rect({
-    left: 100,
-    top: 100,
-    fill: "red",
-    width: 20,
-    height: 20,
-    angle: 45,
-  });
-
-  var circle = new fabric.Circle({
-    radius: 20,
-    fill: "green",
-    left: 100,
-    top: 100,
-  });
-  var triangle = new fabric.Triangle({
-    width: 20,
-    height: 30,
-    fill: "blue",
-    left: 50,
-    top: 50,
-  });
-
-  rect.set("fill", "red");
-  rect.set({ strokeWidth: 5, stroke: "rgba(100,200,200,0.5)" });
-  rect.set("angle", 15).set("flipY", true);
-
-  canvas.add(circle, triangle);
-
-  canvas.add(rect);
+  fabricCanvas.freeDrawingBrush.width = 8;
+  fabricCanvas.freeDrawingBrush.decimate = 20.0;
 }
 
 function fitToContainer(canvas) {

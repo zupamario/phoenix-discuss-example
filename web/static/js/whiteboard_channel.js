@@ -1,5 +1,7 @@
 import socket from "./socket";
-import { updatePreviewPath } from "./whiteboard";
+import { updatePreviewPath, updatePreviewCursor, clearPreviewPath, addPath } from "./whiteboard";
+
+var _ = require('lodash');
 
 export function setup_channel() {
   console.log("setting up channel", socket.socket);
@@ -22,9 +24,40 @@ export function setup_channel() {
       channel.push('preview:update', pathJson)
     }
     window.sendPreviewUpdate = sendPreviewUpdate;
+    window.throttledSendPreviewUpdate = _.throttle(sendPreviewUpdate, 33);
+
+    function sendCursorPosUpdate(cursorPosJson) {
+      channel.push('user:cursor', cursorPosJson);
+    }
+    window.sendCursorPosUpdate = sendCursorPosUpdate;
+    window.throttledSendCursorPosUpdate = _.throttle(sendCursorPosUpdate, 33);
+
+    function sendClearPreviewPath() {
+      channel.push('preview:clear', '');
+    }
+    window.sendClearPreviewPath = sendClearPreviewPath;
+
+    function sendAddPath(pathJson) {
+      channel.push('path:add', pathJson);
+    }
+
+    window.sendAddPath = sendAddPath;
 
     channel.on('preview:replace', (event) => {
-      console.log("Recieved path", event.preview_path);
-      updatePreviewPath(event.preview_path);
+      //console.log("Recieved path", event.preview_path, event.user_id);
+      updatePreviewPath(event.preview_path, event.user_id);
     });
+
+    channel.on('preview:update_cursor', (event) => {
+      //console.log("Recieved preview cursor", event.cursor_pos, event.user_id);
+      updatePreviewCursor(event.cursor_pos, event.user_id);
+    });
+
+    channel.on('preview:clear', (event) => {
+      clearPreviewPath(event.user_id);
+    });
+
+    channel.on('path:add', (event) => {
+      addPath(event.path, event.user_id);
+    })
 }
