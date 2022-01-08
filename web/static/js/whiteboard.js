@@ -3,13 +3,14 @@ import { makePreviewCursor } from "./whiteboard_helper";
 
 let fabricCanvas = null;
 
-function attach_events(canvas) {
+function attach_events(canvas)
+{
   canvas.on("mouse:down", function (options) {
     console.log(options.e.clientX, options.e.clientY);
   });
 
   canvas.on("mouse:move", function (options) {
-    if (options.e.buttons > 0) {
+    if (fabricCanvas.isDrawingMode) {
       send_preview_path();
     }
 
@@ -18,7 +19,7 @@ function attach_events(canvas) {
     );
   });
 
-  canvas.on("path:created", function (options) {
+  canvas.on("before:path:created", function (options) {
     console.log("Path created", options);
     if (fabricCanvas.isDrawingMode) {
       // We are in drawing mode so this means the user has finished drawing his part
@@ -38,6 +39,9 @@ let lastSendPath = "";
 
 function send_preview_path() {
   const brush = fabricCanvas.freeDrawingBrush;
+  if (!brush || brush._points.length == 0) {
+    return;
+  }
   const points = brush._points;
   const decimantedPoints = brush.decimatePoints(points, brush.decimate);
   const svgPath = brush.convertPointsToSVGPath(decimantedPoints);
@@ -119,7 +123,7 @@ function draw_using_fabric() {
   fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush.color = "red";
   fabricCanvas.freeDrawingBrush.width = 8;
-  fabricCanvas.freeDrawingBrush.decimate = 20.0;
+  fabricCanvas.freeDrawingBrush.decimate = 15.0;
 }
 
 function fitToContainer(canvas) {

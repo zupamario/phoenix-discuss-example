@@ -1,7 +1,9 @@
 defmodule Discuss.Endpoint do
   use Phoenix.Endpoint, otp_app: :discuss
 
-  socket "/socket", Discuss.UserSocket
+  socket "/socket", Discuss.UserSocket,
+    longpoll: false,
+    websocket: [compress: true]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
