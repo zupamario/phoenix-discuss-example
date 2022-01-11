@@ -1,3 +1,4 @@
+import {Presence} from "phoenix"
 import socket from "./socket";
 import { updatePreviewPath, updatePreviewCursor, clearPreviewPath, addPath } from "./whiteboard";
 
@@ -12,6 +13,9 @@ export function setup_channel() {
     .join()
     .receive("ok", (resp) => {
       console.log("Joined successfully", resp);
+      resp.paths.forEach(path => {
+        addPath(path);
+      });
     })
     .receive("error", (resp) => {
       console.log("Unable to join", resp);
@@ -19,6 +23,21 @@ export function setup_channel() {
 
     channel.onError( () => console.log("there was an error with the whiteboard channel connection!") );
     channel.onClose( () => console.log("the whiteboard channel has gone away gracefully") );
+
+    const presence = new Presence(channel);
+  
+    presence.onSync(() => {
+      console.log("Presence update", presence.list());
+      //renderPresence(presence.list());
+    });
+    
+    presence.onJoin((key, current, joiner) => {
+      // console.log('join', key, current, joiner);
+    });
+
+    presence.onLeave((key, current, leaver) => {
+      // console.log('leave', key, current, leaver);
+    });
 
     function sendPreviewUpdate(pathJson) {
       channel.push('preview:update', pathJson)
@@ -45,6 +64,7 @@ export function setup_channel() {
 
     channel.on('preview:replace', (event) => {
       //console.log("Recieved path", event.preview_path, event.user_id);
+      console.log("PREVIEW REPLACE!!!!");
       updatePreviewPath(event.preview_path, event.user_id);
     });
 
@@ -54,10 +74,11 @@ export function setup_channel() {
     });
 
     channel.on('preview:clear', (event) => {
+      console.log('RREVIEW CLEAR !!!');
       clearPreviewPath(event.user_id);
     });
 
     channel.on('path:add', (event) => {
-      addPath(event.path, event.user_id);
+      addPath(event.path);
     })
 }

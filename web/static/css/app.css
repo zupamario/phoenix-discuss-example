@@ -1,20 +1,24 @@
 /* This file is for your main application css. */
 
-body {
-  height: 100%;
-}
-
 html,
 body {
   height: 100%;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 .container {
-  height: 100%;
+  flex-grow: 1;
 }
 
 main {
   height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 h5 {
@@ -116,4 +120,12 @@ img.upload-thumb {
 }
 #actions {
   margin: 15px;
+}
+
+.fabric-canvas-container {
+  flex-grow: 1;
+}
+
+.brush-label {
+  margin: 5px;
 }

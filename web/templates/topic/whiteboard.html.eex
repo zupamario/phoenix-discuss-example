@@ -1,8 +1,42 @@
-<canvas id="c" width="300", height="300" style="border: 1px solid black;" />
+<div style="display:flex; justify-content: center; align-items: center; padding-top:7px;">
+    <label class="brush-label" for="color-input">Color:</label>
+    <input id="color-picker" style="max-width:120px;" value="#3399FF" name="color-input" data-jscolor="{}"/>
+    <label class="brush-label" for="width-input">Width:</label>
+    <span class="range-field" style="padding:5px">
+        <input style="max-width:200px;" id="width-slider" type="range" name="width-input" min="2" max="50" />
+    </span>
+</div>
+
+<div class="fabric-canvas-container">
+    <canvas id="c" width="300", height="300" class="z-depth-1" />
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/460/fabric.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.4.6/jscolor.min.js" integrity="sha512-+MYpQFxmnAHvrA8opNlNDNwC8qPiZu9i3Lb86n/H9EYugz2FB6MBRQrKpBrkyL/qQgBjWN2ctQbD9XoaVh+TUg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/@materializecss/materialize@1.1.0-alpha/dist/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@materializecss/materialize@1.1.0-alpha/extras/noUiSlider/nouislider.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/leongersen/wnumb@master/wNumb.js"></script>
 <script type=module>
     document.addEventListener("DOMContentLoaded", function() {
-        whiteboard_main();
+        const colorPicker = document.querySelector("#color-picker").jscolor;
+        console.log(colorPicker);
+        const widthSlider = document.getElementById('width-slider');
+        whiteboard_main(colorPicker, widthSlider);
     });
+</script>
+
+<script>
+jscolor.presets.default = { // Defaults for all pickers on page
+	//position: 'right',
+	//width: 140,
+	//height: 140,
+	//paletteCols: 8,
+	//hideOnPaletteClick: true,
+	palette: [
+		'#000000', '#7d7d7d', '#870014', '#ec1c23', '#ff7e26',
+		'#fef100', '#22b14b', '#00a1e7', '#3f47cc', '#a349a4',
+		'#ffffff', '#c3c3c3', '#b87957', '#feaec9', '#ffc80d',
+		'#eee3af', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7',
+	],
+};
 </script>

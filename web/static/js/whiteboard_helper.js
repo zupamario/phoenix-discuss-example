@@ -1,8 +1,31 @@
+import { colors } from "./clrs";
+var _ = require('lodash');
+
+export function pickStartColor() {
+  const startColors = [
+    colors.aqua,
+    colors.blue,
+    colors.lime,
+    colors.navy,
+    colors.teal,
+    colors.olive,
+    colors.green,
+    colors.red,
+    colors.maroon,
+    colors.orange,
+    colors.purple,
+    colors.yellow,
+    colors.fuchsia
+  ];
+
+  return _.sample(startColors);
+}
+
 export function makePreviewCursor(cursorPos, userId) {
   const circle = new fabric.Circle({
     radius: 10,
-    fill: "blue",
-    stroke: "black",
+    fill: colors.blue,
+    stroke: colors.blue,
     originX: "center",
     originY: "center",
   });
@@ -11,7 +34,8 @@ export function makePreviewCursor(cursorPos, userId) {
     fontSize: 15,
     originX: "center",
     originY: "center",
-    fill: "white",
+    fill: colors.white,
+    fontFamily: "sans-serif"
   });
 
   const group = new fabric.Group([circle, text], {
